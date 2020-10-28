@@ -1,0 +1,23 @@
+syntax = "proto3";
+package nrt;
+
+// IMPORTANT!  This is a copy of tdrv/nerr.h please keep in sync
+enum nerr {
+    NERR_OK = 0;
+    NERR_FAIL = 1;              // non specific failure, don't use if there is more descriptive type
+    NERR_INVALID = 2;           // e.g. invalid NEFF, bad instruction, bad DMA descriptor, input tensor name/size does not match the model, etc.
+    NERR_INVALID_HANDLE = 3;    // make this one explicit instead of using more generic INVALID_INPUT because it could be a common caller mistake
+    NERR_RESOURCE = 4;          // failed to allocate a resource for requested operation
+    NERR_TIMEOUT = 5;           // operation timed out
+    NERR_HW_ERROR = 6;          // hardware error
+    NERR_QUEUE_FULL = 7;        // not enough space in the inference input queue
+    NERR_FAILED_STATE = 8;      // model was stopped due to unrecoverable error
+    NERR_RESOURCE_NC = 9;      // not enough NCs for requested operation (nn load or eg creation)
+    NERR_UNSUPPORTED_VERSION = 10; // unsupported version of NEFF 
+    NERR_INFER_PENDING = 1000;            // inference request still pending
+    NERR_INFER_CANCELLED = 1001;          // inference request has been canceled
+    NERR_INFER_BAD_INPUT = 1002;          // invalid input has been submitted to infer()
+    NERR_INFER_COMPLETED_WITH_NUM_ERR = 1003; // inference was completed with numerical errors (NaN)
+    NERR_INFER_COMPLETED_WITH_ERR = 1004;     // inference was completed with non-numerical errors
+}
+

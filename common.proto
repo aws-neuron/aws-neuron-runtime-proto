@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package nrt;
+
+message address {
+    uint64 data = 1;
+}
+
+// depreciated. Use status below.
+message return_code {
+    int32 data = 1;
+}
+
+message status {
+    int32 code = 1;
+    // use bytes so that char > 127 doesn't cause error
+    bytes details = 2;
+}
+
+message h_model {
+    uint32 id = 1;
+}
+
+enum nc_engine_type {
+    nc_engine_type_pe = 0;
+    nc_engine_type_act = 1;
+    nc_engine_type_pool = 2;
+}
+
+message version {
+    string full_version = 1;
+    uint32 major_num = 2;
+    uint32 minor_num = 3;
+}
+
+// TODO use google wrappeers.proto when I figure out how to include it
+message u32 {
+    uint32 data = 1;
+}
+
+// TODO use google empty.proto when I figure out how to include it
+message empty {
+}

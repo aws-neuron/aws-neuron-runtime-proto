@@ -1,0 +1,8 @@
+syntax = "proto3";
+package nrt;
+import "common.proto";
+import "nmgr.proto";
+
+service nmgr_stream {
+    rpc infer_stream(stream infer_request) returns (stream infer_response) {}
+}

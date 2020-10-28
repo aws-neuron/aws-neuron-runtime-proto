@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package nrt;
+
+message aggregate {
+    double min = 1;
+    double max = 2;
+    double count = 3;
+    double sum = 4;
+    repeated double values = 5;
+    repeated uint32 counts = 6;
+};
+
+message metric_data {
+     uint64 ts_nanos_since_epoch = 1;
+     oneof value {
+         double value_double = 2;
+         aggregate value_agg = 3;
+     }
+};
