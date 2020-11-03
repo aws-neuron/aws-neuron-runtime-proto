@@ -19,6 +19,7 @@ service nmgr_v1 {
   rpc list_egs(empty) returns (out_list_egs) {}
 
   rpc read_nc_counters(read_nc_counters_request) returns (read_nc_counters_response) {}
+  rpc read_nc_time_in_use(read_nc_time_in_use_request) returns (read_nc_time_in_use_response) {}
   rpc read_inference_counters(empty) returns (read_inference_counters_response) {}
   rpc read_all_counters(read_all_counters_request) returns (read_all_counters_response) {}
   rpc read_all_metrics(read_all_metrics_request) returns (read_all_metrics_response) {}
