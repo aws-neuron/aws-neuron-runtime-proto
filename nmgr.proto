@@ -1,0 +1,362 @@
+syntax = "proto3";
+
+package nrt;
+
+import "common.proto";
+import "nmetric.proto";
+
+message h_nn {
+    uint32 id = 1;
+}
+
+message h_eg {
+    uint32 id = 1;
+}
+
+message model_params {
+    u32 timeout = 1;
+    u32 ninfer = 2;
+    u32 enable_tracing = 3;
+    u32 io_data_host = 4;
+    u32 fmap_in_huge_tlb = 5;
+    u32 enable_node_profiling = 6;
+}
+
+message file_chunk {
+    bytes  chunk = 1;
+}
+
+message shared_mem_buf {
+   string path = 1;
+}
+
+message infer_io {
+    oneof data {
+        bytes buf = 1;  // Data is encoded directly into message
+        shared_mem_buf buf_shm = 2; // Data is placed in shared memory
+    }
+    string name = 3;
+}
+
+enum infer_error_subtype {
+    INFER_ERROR_SUBTYPE_NONE = 0;
+    INFER_ERROR_SUBTYPE_NUMERICAL = 1;
+    INFER_ERROR_SUBTYPE_MODEL = 2;
+    INFER_ERROR_SUBTYPE_TRANSIENT = 3;
+    INFER_ERROR_SUBTYPE_HW_ERROR = 4;
+    INFER_ERROR_SUBTYPE_RT = 5;
+}
+
+message infer_error_subtype_count {
+    infer_error_subtype error_subtype = 1;
+    uint32 count = 2;
+}
+
+// rpc load()
+message load_request {
+    oneof content {
+        h_eg h_eg = 1;
+        model_params model_params = 2;
+        uint64 neff_size = 3;
+        file_chunk neff_chunk = 4;
+        string neff_file = 5;
+        uint64 session_id = 6;
+    }
+}
+
+message load_response {
+    status status = 1;
+    h_nn h_nn = 2;
+}
+
+// rpc unload()
+message unload_request {
+    h_nn h_nn = 1;
+}
+
+message unload_response {
+    status status = 1;
+}
+
+// rpc start()
+message start_request  {
+    h_nn h_nn = 1;
+}
+
+message start_response  {
+    status status = 1;
+}
+
+// rpc stop()
+message stop_request  {
+    h_nn h_nn = 1;
+}
+
+message stop_response  {
+    status status = 1;
+}
+
+message infer_request {
+    h_nn h_nn = 1;
+    repeated infer_io ifmap = 2;
+    repeated infer_io shm_ofmap = 3; // Buffer supplied by client to place OFMAPs in shared memory.
+    uint32 loop_end_value = 4;
+}
+
+message infer_wait_request {
+    uint64 cookie = 1;
+    repeated infer_io shm_ofmap = 2; // Buffer supplied by client to place OFMAPs in shared memory.
+}
+
+message infer_response {
+    status status = 1;
+    repeated infer_io ofmap = 3; // if shm_ofmap is supplied in in_exec, this remains empty, and provided buffers are used.
+}
+
+message infer_post_response {
+    status status = 1;
+    uint64 cookie = 2;
+}
+
+message infer_check_completion_request {
+    repeated uint64 cookie = 1;
+}
+
+message infer_check_completion_response {
+    status status = 1;
+    repeated uint64 cookie = 2;
+}
+
+message create_eg_request {
+    uint32 nc_count = 1; // optional, if not specified allocate the largest possible (max number of contiguous NCs)
+    uint64 session_id = 2; // optional, if not specified this EG is not marked for session tracking
+};
+
+message create_eg_response {
+    status status = 1;
+    h_eg h_eg = 2;
+    uint32 nc_count = 3; // returns the number of NCs in created EG
+};
+
+message destroy_eg_request {
+    h_eg h_eg = 1;
+};
+
+message destroy_eg_response {
+    status status = 1;
+};
+
+message eg_info {
+    h_eg eg = 1;
+    uint32 vnc_start_index = 2;
+    uint32 nc_count = 3;
+    uint32 mla_start_index = 4;
+    uint32 nc_start_index = 5;
+}
+
+message out_list_egs {
+    repeated eg_info eg_info = 1;
+    uint32 mla_count = 2;
+    uint32 nc_count = 3;
+    status status = 4;
+}
+
+message hugetlb_shm {
+    string path = 1;
+    uint32 size = 2;
+}
+
+message shm_map_request {
+    oneof data {
+        string path = 1;
+        hugetlb_shm path_hugetlb = 3;
+    }
+    uint32 mmap_prot = 2;
+    uint64 session_id = 4;
+}
+message shm_map_response {
+    status status = 1;
+}
+
+message shm_unmap_request {
+    string path = 1;
+    uint32 mmap_prot = 2;
+}
+message shm_unmap_response {
+    status status = 1;
+}
+
+// The following fields are accelerator specific, and may changee or not be available on later versions.
+message nc_counters {
+    uint32 virtual_nc_id = 1;
+
+    uint64 pe_num_idle_cycles = 2;
+    uint64 pe_num_wait_event_cycles = 3;
+    uint64 pe_matmul_num_wait_event_cycles = 4;
+    uint64 pe_num_executed_instr = 5;
+    uint64 pe_matmul_num_executed_instr = 6;
+
+    uint64 pool_num_idle_cycles = 7;
+    uint64 pool_num_wait_event_cycles = 8;
+    uint64 pool_num_executed_instr = 9;
+
+    uint64 act_num_idle_cycles = 10;
+    uint64 act_num_wait_event_cycles = 11;
+    uint64 act_num_executed_instr = 12;
+
+    uint64 sb_rmw_count = 13;
+    uint64 macs_count = 14;
+
+    };
+
+// Must match infer_status in nmgr.h
+enum infer_status {
+    IST_OK = 0;
+    IST_COMPLETED_WITH_NUM_ERR = 1;  // inference was completed with numerical errors
+    IST_COMPLETED_WITH_ERR = 2;  // inference was completed with errors
+    IST_BAD_INPUT = 3;           // invalid input has been submitted to infer()
+    IST_TIMEOUT = 4;             // timed out
+    IST_UNKNOWN = 15;            // extra bucket for anything we forgot to map, leave space above for a few more to be defined in the future
+};
+
+message infer_status_counts {
+    infer_status infer_status = 1;
+    uint32 count = 2;
+}
+
+message nmgr_counters {
+    repeated infer_error_subtype_count infer_error_subtype_count = 1;
+    repeated infer_status_counts infer_status_counts = 2;
+
+    uint64 infer_queue_drop_count = 3;
+    uint64 infer_count = 4;
+
+    uint64 model_start_count = 5;
+    uint64 model_stop_count = 6;
+    uint64 model_load_count = 7;
+    uint64 model_unload_count = 8;
+
+    uint64 neff_version_max_major = 9;
+    uint64 neff_version_max_minor = 10;
+    uint64 neff_version_min_major = 11;
+    uint64 neff_version_min_minor = 12;
+
+    uint64 neff_size_bytes_max = 13;
+    uint64 neff_num_ncs_max = 14;
+};
+
+message memory_counters {
+    uint32 infa_id = 1;
+    uint64 mem_used_host = 2;
+    uint64 mem_used_infa_0 = 3;
+    uint64 mem_used_infa_1 = 4;
+};
+
+message system_counters {
+    uint64 num_logs_error = 1;
+    uint64 num_logs_warning = 2;
+    repeated memory_counters memory_counters = 3;
+
+};
+enum metric_type {
+    NMGR_METRIC_INFER_LATENCY = 0;
+    NMGR_METRIC_INFER_ON_INFA_LATENCY = 1;
+
+    NMGR_METRIC_MODEL_START_LATENCY = 2;
+    NMGR_METRIC_MODEL_STOP_LATENCY = 3;
+    NMGR_METRIC_MODEL_LOAD_LATENCY = 4;
+    NMGR_METRIC_MODEL_UNLOAD_LATENCY = 5;
+
+    NMGR_METRIC_MODEL_SIZE = 6;
+    NMGR_METRIC_MODEL_NUM_NC = 7;
+    NMGR_METRIC_MODEL_MAJOR_VERSION= 8;
+    NMGR_METRIC_INFER_ON_INFA_CYCLESx1k = 9;
+
+    NMGR_METRIC_NUM = 10;
+};
+
+message metric {
+    metric_type metric_type = 2;
+    repeated metric_data data = 3;
+    bool overflow = 4;
+};
+
+
+message read_all_metrics_request {
+    uint32 summarize_period = 1;
+};
+
+message read_all_metrics_response {
+    repeated metric nmgr_metrics = 1;
+    status status = 2;
+};
+
+message read_nc_counters_request {
+    uint32 vnc_id = 1;
+};
+
+message read_nc_counters_response {
+    nc_counters nc_counters = 1;
+    status status = 2;
+};
+
+message read_inference_counters_response {
+    nmgr_counters nmgr_counters = 1;
+};
+
+message read_all_counters_request {
+};
+
+message read_all_counters_response {
+    repeated nc_counters nc_counters = 2;
+    // removed repeated ens_counters nc_ens_counters = 3;
+    nmgr_counters nmgr_counters = 4;
+    system_counters system_counters = 5;
+    status status = 6;
+};
+
+message hw_counters {
+    string bdf = 1;
+    uint32 device_index = 2;
+    uint32 mem_ecc_corr = 3;
+    uint32 mem_ecc_uncorr = 4;
+    uint32 sram_ecc_corr = 5;
+    uint32 sram_ecc_uncorr = 6;
+    uint32 transfer_adjustment_cnt = 7;
+};
+
+message get_hw_counters_request {
+    oneof device {
+        string bdf = 1; // lookup by BDF
+        uint32 device_id = 2; // lookup by device id
+    }
+};
+
+message get_hw_counters_response {
+    status status = 2;
+    hw_counters counters = 1;
+};
+
+message get_all_hw_counters_response {
+    status status = 2;
+    repeated hw_counters counters = 1;
+};
+
+message random_seed_request {
+    h_eg h_eg = 1;
+    uint32 seed = 2;
+};
+
+message random_seed_response {
+    status status = 1;
+};
+
+message get_version_request {
+    string framework_name = 1;
+    version framework_version = 2;
+    version fal_version = 3;
+};
+
+message get_version_response {
+    version runtime_version = 1;
+}
