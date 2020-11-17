@@ -1,15 +1,6 @@
-## My Project
+## AWS Neuron Runtime Proto
 
-TODO: Fill this README out!
-
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+AWS Neuron SDK comprises of the AWS Neuron FAL (Tensorflow/MXNET/PyTorch) and AWS Neuron Runtime. The proto files in this repo specify the API's that are used by the AWS Neuron Tensorflow component to interact with the AWS Neuron Runtime.
 
 ## License
 
