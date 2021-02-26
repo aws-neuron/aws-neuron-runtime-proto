@@ -38,4 +38,5 @@ service nmgr_v1 {
   rpc random_seed(random_seed_request) returns(random_seed_response) {}
 
   rpc get_version(get_version_request) returns (get_version_response) {}
+  rpc set_static_transfer_adjustment(set_static_transfer_adjustment_request) returns (set_static_transfer_adjustment_response) {}
 }

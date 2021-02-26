@@ -373,3 +373,12 @@ message read_nc_time_in_use_response {
     nc_time_in_use nc_time_in_use = 1;
     status status = 2;
 };
+
+message set_static_transfer_adjustment_request {
+    uint32 transfer_adjust_cnt = 1;
+};
+
+message set_static_transfer_adjustment_response {
+    status status = 1;
+};
+
