@@ -206,7 +206,6 @@ message nc_counters {
 
     uint64 sb_rmw_count = 13;
     uint64 macs_count = 14;
-
     };
 
 // Must match infer_status in nmgr.h
@@ -360,3 +359,26 @@ message get_version_request {
 message get_version_response {
     version runtime_version = 1;
 }
+
+message read_nc_time_in_use_request {
+    uint32 vnc_id = 1;
+};
+
+message nc_time_in_use {
+    uint32 virtual_nc_id = 1;
+    uint64 time_in_use = 2;
+};
+
+message read_nc_time_in_use_response {
+    nc_time_in_use nc_time_in_use = 1;
+    status status = 2;
+};
+
+message set_static_transfer_adjustment_request {
+    uint32 transfer_adjust_cnt = 1;
+};
+
+message set_static_transfer_adjustment_response {
+    status status = 1;
+};
+
